@@ -1,0 +1,213 @@
+openapi: 3.0.0
+info:
+  title: Filmoteka API
+  description: Api task to VK Intern
+  version: 1.0.0
+servers:
+  - url: localhost:8080
+paths:
+  /actor:
+    post:
+      summary: Add actor information
+      security:
+        - AdminAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Actor'
+        required: true
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actor'
+        '404':
+          description: User has no rights to create
+        '409':
+          description: Unique constraint failed
+    get:
+      summary: Get actors list
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Actor"
+  /actor/{actor_id}:
+    put:
+      summary: Refactor actor information
+      security:
+        - AdminAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Actor'
+        required: true
+      responses:
+        '201':
+          description: Refactored successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actor'
+        '400':
+          description: Actor doesn't exists in database
+        '404':
+          description: User has no rights to refactor
+    delete:
+      summary: Delete current actor from database
+      security:
+        - AdminAuth: []
+      responses:
+        '201':
+          description: Deleted successfully
+        '400':
+          description: Actor doesn't exists in database
+        '404':
+          description: User has no rights to delete
+  /film:
+    post:
+      summary: Add film information
+      security:
+        - AdminAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Film'
+        required: true
+      responses:
+        '201':
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actor'
+        '404':
+          description: User has no rights to create
+        '409':
+          description: Unique constraint failed
+    get:
+      summary: Get films list
+      parameters:
+        - name: search
+          in: query
+          description: Part of film name
+          schema:
+            type: string
+            default: ''
+          required: false
+        - name: actor
+          in: query
+          description: Part of actor name
+          schema:
+            type: string
+            default: ''
+          required: false
+        - name: order
+          in: query
+          description: Answer ordering
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: 'desc'
+          required: false
+        - name: field
+          in: query
+          description: Field to order by
+          schema:
+            type: string
+            enum: [name, rating, date]
+            default: 'rating'
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Film"
+  /film/{film_id}:
+    put:
+      summary: Refactor film information
+      security:
+        - AdminAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Film'
+        required: true
+      responses:
+        '201':
+          description: Refactored successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Film'
+        '400':
+          description: Film doesn't exist in the database
+        '404':
+          description: User has no rights to refactor
+    delete:
+      summary: Delete current film from database
+      security:
+        - AdminAuth: []
+      responses:
+        '201':
+          description: Deleted successfully
+        '400':
+          description: Film doesn't exist in the database
+        '404':
+          description: User has no rights to delete
+
+components:
+  schemas:
+    Actor:
+      type: object
+      properties:
+        name:
+          type: string
+        gender:
+          type: boolean
+          description: true if man, false if woman
+        birthday:
+          type: string
+          example: "03-01-2005"
+    Film:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        description:
+          maxLength: 1000
+        date:
+          type: string
+          example: "03-01-2005"
+        rating:
+          type: number
+          minimum: 0
+          maximum: 10
+
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+
+
+
+
+
