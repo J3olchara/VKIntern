@@ -13,6 +13,8 @@ import (
 func ApplyRoutes(mux *http.ServeMux) {
 	mux.Handle("/film", middleware.RequestLogger(&film.Handler{}))
 	mux.Handle("/actor", middleware.RequestLogger(&actor.Handler{}))
+	//mux.Handle("/film", middleware.RequestLogger(&film.Handler{}))
+	mux.Handle("/actor/", middleware.RequestLogger(&actor.IDHandler{}))
 }
 
 func StartServer() {
