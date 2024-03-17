@@ -58,18 +58,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Actor'
         '400':
-          description: Actor doesn't exists in database
+          description: Actor doesn't exists in db
         '404':
           description: User has no rights to refactor
     delete:
-      summary: Delete current actor from database
+      summary: Delete current actor from db
       security:
         - AdminAuth: []
       responses:
         '201':
           description: Deleted successfully
         '400':
-          description: Actor doesn't exists in database
+          description: Actor doesn't exists in db
         '404':
           description: User has no rights to delete
   /film:
@@ -155,18 +155,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/Film'
         '400':
-          description: Film doesn't exist in the database
+          description: Film doesn't exist in the db
         '404':
           description: User has no rights to refactor
     delete:
-      summary: Delete current film from database
+      summary: Delete current film from db
       security:
         - AdminAuth: []
       responses:
         '201':
           description: Deleted successfully
         '400':
-          description: Film doesn't exist in the database
+          description: Film doesn't exist in the db
         '404':
           description: User has no rights to delete
 
@@ -205,9 +205,3 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-
-
-
-
-
