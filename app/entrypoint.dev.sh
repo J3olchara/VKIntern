@@ -1,1 +1,1 @@
-echo 123
+ECHO "Web is listening on ${HOST}:${PORT} in DEV mode"

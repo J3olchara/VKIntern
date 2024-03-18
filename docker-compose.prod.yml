@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: ./app
-      dockerfile: ./Dockerfile.dev
+      dockerfile: ./Dockerfile.prod
     command: go run app/cmd/main.go
     hostname: 'localhost'
     ports:
@@ -12,8 +12,8 @@ services:
     volumes:
       - .:/app
     env_file:
-      - env/dev.env
-      - env/dev.db.env
+      - env/prod.env
+      - env/prod.db.env
     depends_on:
       - db
   db:
@@ -23,7 +23,8 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - env/dev.db.env
+      - env/prod.db.env
+  # you can set nginx service if you want to make good prod
 
 volumes:
   postgres-data:
