@@ -63,17 +63,19 @@ paths:
           description: Body data corrupted
         '404':
           description: Actor doesn't exists in the database
+        '500':
+          description: Server error
     delete:
       summary: Delete current actor from db
       security:
         - AdminAuth: []
       responses:
-        '201':
+        '200':
           description: Deleted successfully
         '400':
           description: Actor doesn't exists in db
         '404':
-          description: User has no rights to delete
+          description: Actor not found
   /film:
     post:
       summary: Add film information
@@ -192,6 +194,10 @@ components:
         birthday:
           type: string
           example: "2006-01-02"
+        films:
+          type: array
+          items:
+              $ref: '#/components/schemas/Film'
     Film:
       type: object
       properties:
@@ -213,6 +219,11 @@ components:
           type: number
           minimum: 0
           maximum: 10
+        Actors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Actor'
+
 
   securitySchemes:
     AdminAuth:

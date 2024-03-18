@@ -1,11 +1,11 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/J3olchara/VKIntern/app/server/db/models"
+	"github.com/J3olchara/VKIntern/app/server/support"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"log"
 	"os"
 	"sync"
 )
@@ -28,17 +28,18 @@ func NewConnection() *DB {
 		host := os.Getenv("POSTGRES_HOST")
 		port := os.Getenv("POSTGRES_PORT")
 
+		connectionDataSql := fmt.Sprintf("user=%s password=%s host=%s port=%s sslmode=disable", user, password, host, port)
 		connectionData := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable", user, password, dbname, host, port)
+		dbSql, err := sql.Open("postgres", connectionDataSql)
+		support.FatalErr(err)
+		_, err = dbSql.Exec("CREATE DATABASE " + dbname)
+		support.WarningErr(err)
+		err = dbSql.Close()
+		support.FatalErr(err)
 		db, err := gorm.Open("postgres", connectionData)
-		if err != nil {
-			log.Fatal(err)
-		}
+		support.FatalErr(err)
 
 		Conn = &DB{db}
 	})
 	return Conn
-}
-
-func (db *DB) Prepare() {
-	db.AutoMigrate(&models.Actor{}, &models.Film{}, &models.FilmActor{})
 }

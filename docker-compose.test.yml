@@ -1,0 +1,39 @@
+version: "3.8"
+# docker-compose -f docker-compose.test.yml -p vk_test up --abort-on-container-exit
+
+services:
+  web:
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile.test
+    command: go run app/cmd/main.go
+    hostname: 'localhost'
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    env_file:
+      - env/test.env
+      - env/test.db.env
+    depends_on:
+      - db
+  db:
+    image: postgres:15.3-alpine
+    ports:
+      - "5432:5432"
+    env_file:
+      - env/test.db.env
+    volumes:
+      - /var/lib/postgresql/data
+  tests:
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile.test
+    command: /bin/sh -c "sleep 1 && go test ./tests/... -p 1"
+    env_file:
+      - env/test.env
+      - env/test.db.env
+    volumes:
+      - .:/app
+    depends_on:
+      - web

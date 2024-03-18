@@ -4,68 +4,110 @@ import (
 	"encoding/json"
 	"github.com/J3olchara/VKIntern/app/server/db"
 	"github.com/J3olchara/VKIntern/app/server/db/models"
-	"log"
+	"github.com/J3olchara/VKIntern/app/server/support"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Handler struct {
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		h.post(w, r)
-	} else if r.Method == "GET" {
-		h.get(w, r)
-	}
+type IDHandler struct {
 }
 
-func (h *Handler) post(w http.ResponseWriter, r *http.Request) {
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(models.User)
+	if r.Method == http.MethodPost && user.Staff {
+		h.post(w, r)
+		return
+	}
+	if r.Method == http.MethodGet {
+		h.get(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func (h Handler) post(w http.ResponseWriter, r *http.Request) {
 	var film models.Film
-	if err := json.NewDecoder(r.Body).Decode(&film); err != nil {
+	err := json.NewDecoder(r.Body).Decode(&film)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	res := db.Conn.Create(&film)
-	if res.Error != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	if !film.Create() {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	filmJson, err := json.Marshal(film)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatal(err)
-	}
+	support.PanicErr(err)
+	models.CreateRelations(&film, film.Actors)
 	w.WriteHeader(http.StatusCreated)
 	_, _ = w.Write(filmJson)
 }
 
-func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
-	var films []models.Film
+func (h Handler) get(w http.ResponseWriter, r *http.Request) {
 	var search models.Search
 	search.Search = r.URL.Query().Get("search")
 	search.Ordering = r.URL.Query().Get("ordering")
 	search.Field = r.URL.Query().Get("field")
 	search.ActorName = r.URL.Query().Get("actor")
-	if search.Ordering == "" {
-		search.Ordering = "desc"
-	}
-	if search.Field == "" {
-		search.Field = "rating"
-	}
-	res := db.Conn.
-		Preload("Actors").
-		Where("LOWER(name) LIKE LOWER(?)", "%"+search.Search+"%").
-		Order(search.Field + " " + search.Ordering).
-		Find(&films)
-	if res.Error != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	films := models.SearchFilms(search)
 	filmsJson, err := json.Marshal(films)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatal(err)
-	}
+	support.PanicErr(err)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(filmsJson)
+}
+
+func (h IDHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(models.User)
+	if r.Method == http.MethodPut && user.Staff {
+		h.put(w, r)
+		return
+	}
+	if r.Method == http.MethodDelete && user.Staff {
+		h.delete(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func (h IDHandler) put(w http.ResponseWriter, r *http.Request) {
+	var film *models.Film
+	intID, err := strconv.Atoi(strings.Trim(r.URL.Path, "/actor/"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&film)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !film.Save() {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	film.ID = uint(intID)
+	models.UpdateRelations(film, film.Actors)
+	filmJson, err := json.Marshal(film)
+	support.PanicErr(err)
+	w.WriteHeader(http.StatusCreated)
+
+	_, _ = w.Write(filmJson)
+}
+
+func (h IDHandler) delete(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(strings.Trim(r.URL.Path, "/film/"))
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	res := db.Conn.Delete(&models.Film{}, uint(id))
+	support.PanicErr(err)
+	if res.RowsAffected == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 }

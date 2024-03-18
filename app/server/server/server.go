@@ -11,8 +11,14 @@ import (
 )
 
 func ApplyRoutes(mux *http.ServeMux) {
-	mux.Handle("/film", middleware.RequestLogger(&film.Handler{}))
-	mux.Handle("/actor", middleware.RequestLogger(&actor.Handler{}))
+	mux.Handle("/film", middleware.AuthMiddleware(middleware.PanicMiddleware(
+		middleware.RequestLogger(&film.Handler{}))))
+	mux.Handle("/film/", middleware.AuthMiddleware(middleware.PanicMiddleware(
+		middleware.RequestLogger(&film.IDHandler{}))))
+	mux.Handle("/actor", middleware.AuthMiddleware(middleware.PanicMiddleware(
+		middleware.RequestLogger(&actor.Handler{}))))
+	mux.Handle("/actor/", middleware.AuthMiddleware(middleware.PanicMiddleware(
+		middleware.RequestLogger(&actor.IDHandler{}))))
 }
 
 func StartServer() {
