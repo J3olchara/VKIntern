@@ -2,7 +2,6 @@ package film
 
 import (
 	"encoding/json"
-	"github.com/J3olchara/VKIntern/app/server/db"
 	"github.com/J3olchara/VKIntern/app/server/db/models"
 	"github.com/J3olchara/VKIntern/app/server/support"
 	"net/http"
@@ -104,9 +103,8 @@ func (h IDHandler) delete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	res := db.Conn.Delete(&models.Film{}, uint(id))
-	support.PanicErr(err)
-	if res.RowsAffected == 0 {
+	film := &models.Film{ID: uint(id)}
+	if !film.Delete() {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
