@@ -1,5 +1,7 @@
 version: '3.8'
 
+#  docker-compose -f docker-compose.dev.yml -p vk up
+
 services:
   web:
     build:
@@ -12,8 +14,8 @@ services:
     volumes:
       - .:/app
     env_file:
-      - ./dev.env
-      - ./dev.db.env
+      - env/dev.env
+      - env/dev.db.env
     depends_on:
       - db
   db:
@@ -23,7 +25,7 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - ./dev.db.env
+      - env/dev.db.env
 
 volumes:
   postgres-data:
